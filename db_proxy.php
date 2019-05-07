@@ -4,7 +4,6 @@ require 'logger.php';
 
 $LOGFILE = "../../db_proxy.log";
 $CREDENTIALS_FILE = "../../database_connect.ini";
-$MAXLOGSIZE = "4096";
 
 define("logfile", $LOGFILE);
 define("DB_EXTENSION", "mysqli");

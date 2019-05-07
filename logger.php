@@ -13,20 +13,12 @@ class Logger {
   }
 
   static function write ( $msg, $lvl = 'INFO' ){
-    global $MAXLOGSIZE, $LOGFILE;
+    global $LOGFILE;
 
     if ( ($log_file = fopen ( $LOGFILE, "a" )) == FALSE )
       return;
 
     fwrite ($log_file, date("Y-m-d H:i:s")." - $lvl - $msg<br>\r\n");
-    $lstat=fstat($log_file);
-    if ($lstat["size"]>$MAXLOGSIZE) self::rotate_log();
     fclose($log_file);
-  }
-
-  static function rotate_log() {
-    global $MAXLOGSIZE, $LOGFILE;
-    self::write("Logfile reached maximum size ($MAXLOGSIZE)- rotating.");
-    rename ($LOGFILE,$LOGFILE."_".date("Y-m-d"));
   }
 }
