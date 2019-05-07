@@ -147,7 +147,7 @@ function load_and_output($mysqli, $query) {
   }
 
   if (mysqli_errno($mysqli)!=0) {
-    Logger::error("DB Exception! " . $mysqli->errno . ", '" . $mysqli->error . "'" );
+    Logger::error("DB Exception! ", $mysqli->errno . " " . $mysqli->error );
     handle_error ( $mysqli->errno, $mysqli->error );
   }else {
     Logger::info("SQL run successful");

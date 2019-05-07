@@ -9,7 +9,7 @@ class Logger {
   }
 
   public static function error($msg, $exception = null) {
-    self::write($msg . $exception ? "Exception: $exception" : '', 'ERROR');
+    self::write($msg . $exception ? "Exception: " . $exception : '', 'ERROR');
   }
 
   static function write ( $msg, $lvl = 'INFO' ){
