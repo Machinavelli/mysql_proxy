@@ -1,4 +1,9 @@
+# IntelliJ Idea files
 .idea
-.iml
+*.iml
+
+# ...
 .vscode
+
+# MacOS files
 .DS_Store
