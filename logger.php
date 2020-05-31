@@ -1,6 +1,7 @@
 <?php
 class Logger {
   private static $file;
+  private static $is_set_up = false, $failed = null;
   
   public static function info($msg) {
     self::write($msg, 'INFO');
@@ -14,15 +15,31 @@ class Logger {
     self::write($msg . $exception ? "Exception: " . $exception : '', 'ERROR');
   }
 
-  static function write ( $msg, $lvl = 'INFO' ){
+  static function setup(){
     global $LOGFILE;
 
-    try {
-      if ( ($log_file = fopen ( $LOGFILE, "a" )) == FALSE )
-        return;
+    if ((self::$file = fopen ( $LOGFILE, "a")) == true){
+      self::$is_set_up = true;
+      self::$failed = false;
+    } else {
+      self::$failed = false;
+    };
+  }
 
-      fwrite ($log_file, date("Y-m-d H:i:s")." - $lvl - $msg<br>\r\n");
-      fclose($log_file);
+  public static function close(){
+    if (is_resource(self::$file)){
+      fclose(self::$file);
+    }
+  }
+
+  static function write ( $msg, $lvl = 'INFO' ){
+    try {
+      if ( !self::$is_set_up && self::$failed == null){
+        self::setup();
+      }
+      if (self::$is_set_up && !self::$failed){
+        fwrite (self::$file, date("Y-m-d H:i:s")." - $lvl - $msg<br>\r\n");
+      }  
     } catch (Exception $e) {
         // what else is there to do
     }

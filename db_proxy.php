@@ -28,7 +28,7 @@ function require_auth() {
   if ($is_not_authenticated) {
     Logger::warn( "Refusing to serve (unauthorized) = " . get_user_ip() );
     Logger::warn( "User = " . $_SERVER['PHP_AUTH_USER'] );
-    handle_error(401, '');
+    handle_error(401, 'Unauthorized');
   }
 }
 
@@ -130,6 +130,7 @@ function handle_error($errno, $error){
   $res->error_number = $errno;
   $res->error_desc = $error;
   $res->print_result();
+  Logger::close();
   die;
 }
 
@@ -248,7 +249,7 @@ if(!is_allowed_ip($allow_ips)){
 
 if (!is_secure_link()) {
   Logger::info( "Request was sent over unsecured link (" . $_SERVER['HTTP_HOST'] . ", " . get_user_ip() . ")" );
-  handle_error(400, 'Secure the link.');
+  handle_error(400, 'Insecure link.');
 }
 
 if ( strlen ( $query ) == 0 ) {
@@ -258,5 +259,14 @@ if ( strlen ( $query ) == 0 ) {
   Logger::info( "Query = $query");
 }
 
-require_auth();
-process_request();
+
+try {
+  require_auth();
+  process_request();
+} catch (Exception $e) {
+  handle_error(500, 'Internal error');
+}
+
+Logger::close();
+
+
