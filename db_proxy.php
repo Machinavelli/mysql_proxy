@@ -13,7 +13,6 @@ define( "DEBUG", 1 );
 
 ini_set('display_startup_errors', 0);
 ini_set('display_errors', 0);
-error_reporting(0);
 
 
 function require_auth() {
@@ -56,7 +55,8 @@ function get_user_ip(){
 
 function is_localhost(){
   $addr = get_user_ip();
-  return ($addr == 'localhost' || $addr == '127.0.0.1' || $addr == '::1') && !array_key_exists('HTTP_X_FORWARDED_FOR', $_SERVER);
+  return ($addr == 'localhost' || $addr == '127.0.0.1' || $addr == '::1') 
+    && !array_key_exists('HTTP_X_FORWARDED_FOR', $_SERVER);
 }
 
 function is_allowed_ip($list) {
@@ -84,7 +84,7 @@ function get_request_value($name){
   } else if(array_key_exists($name,$_GET)){
     $value=$_GET[$name];
   } else {
-    return "";
+    return null;
   }
 
   if(!is_array($value))
@@ -126,7 +126,7 @@ function parse_query($query){
   Return error response
 */
 function handle_error($errno, $error){
-  $res = new Result();
+  $res = new Result('array');
   $res->error_number = $errno;
   $res->error_desc = $error;
   $res->print_result();
@@ -136,7 +136,7 @@ function handle_error($errno, $error){
 
 function load_and_output($mysqli, $query) {
   $result = $mysqli->query($query, MYSQLI_STORE_RESULT);
-
+  
   try {
     $n_rows = $mysqli->affected_rows;
   } catch (Exception $e) {
@@ -167,7 +167,7 @@ function load_and_output($mysqli, $query) {
     } else if (is_bool($result)) {
       $out_result = array("result" => 1, "affected_rows" => $n_rows);
       create_result($mysqli, $query, $out_result);
-    }else {
+    } else {
       $out_result = array("result"=>$result, "affected_rows"=>$n_rows, "field_count" => $n_fields);
       create_result ($mysqli, $query, $out_result);
       $result->close();
@@ -176,14 +176,23 @@ function load_and_output($mysqli, $query) {
 }
 
 function create_result($mysql, $query, $mysql_result){
+  global $out_formt;
   $result = $mysql_result['result'];
 
-  $res = new Result();
+  $res = new Result($out_formt);
   $res->query = $query;
   $res->affected_rows = $mysql_result['affected_rows'];
   $res->insert_id = $mysql->insert_id;
 
+
   if (!is_int($result)) {
+    $field_names = Array();
+
+    foreach ($result->fetch_fields() as $val) {
+      $field_names[] = $val->name;
+    }
+
+    $res->set_field_names($field_names);
     $res->field_count = $mysql_result['field_count'];
     while ($row = $result->fetch_assoc()) {
       $res->add_row($row);
@@ -226,14 +235,10 @@ $username   = $credentials["username"];
 $password   = $credentials["password"];
 $secret     = array_key_exists ( "key" , $credentials ) ? $credentials["key"] : null;
 $query      = get_request_value("query") ?: null;
+$out_formt  = get_request_value('format')?: null;
 define("auth_pw", $credentials["proxy_pass"]);
 define("auth_user", $credentials["proxy_user"]);
 
-if ( is_localhost() ){
-  error_reporting ( E_ALL );
-}else{
-  error_reporting ( 0 );
-}
 
 //Convert Query to defined charset
 if (charset <> "") {
