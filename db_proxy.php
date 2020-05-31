@@ -2,17 +2,18 @@
 require 'result.php';
 require 'logger.php';
 
-$LOGFILE = "../../db_proxy.log";
-$CREDENTIALS_FILE = "../../database_connect.ini";
+$settings_loc = parse_ini_file ('settings.ini');
+$LOGFILE = $settings_loc['LOGFILE'] or die('Please set up LOGFILE value in settings.ini');
+$CREDENTIALS_FILE = $settings_loc['CREDENTIALS'] or die('Please set up CREDENTIALS value in settings.ini');
 
 define("logfile", $LOGFILE);
 define("DB_EXTENSION", "mysqli");
 define( "charset", 'utf8');
 define( "DEBUG", 1 );
 
-ini_set('display_startup_errors', 1);
-ini_set('display_errors', 1);
-error_reporting(-1);
+ini_set('display_startup_errors', 0);
+ini_set('display_errors', 0);
+error_reporting(0);
 
 
 function require_auth() {
@@ -120,7 +121,10 @@ function parse_query($query){
   return $queries[0];
 }
 
-/* Function handling mysql_pconnect() error */
+/* 
+  Handling of mysql & custom errors
+  Return error response
+*/
 function handle_error($errno, $error){
   $res = new Result();
   $res->error_number = $errno;
@@ -206,7 +210,7 @@ function process_request (){
 
 // DO IT!
 
-Logger::info( "---------------------------------------------------------------------" );
+Logger::info( "-------------------" );
 
 header('Cache-Control: no-cache, must-revalidate, max-age=0');
 header('Content-type:application/json;charset=utf-8');
@@ -214,7 +218,6 @@ header('Content-type:application/json;charset=utf-8');
 $credentials = parse_ini_file ( $CREDENTIALS_FILE );
 $allow_ips = array_key_exists ( "allowed_ips" , $credentials ) ? $credentials["allowed_ips"] : null;
 
-$encrypted  = get_request_value("encrypted");
 $host       = $credentials["hostname"];
 $port       = $credentials["port"];
 $dbname     = $credentials["dbname"];

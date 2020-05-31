@@ -1,5 +1,7 @@
 <?php
 class Logger {
+  private static $file;
+  
   public static function info($msg) {
     self::write($msg, 'INFO');
   }
@@ -15,10 +17,14 @@ class Logger {
   static function write ( $msg, $lvl = 'INFO' ){
     global $LOGFILE;
 
-    if ( ($log_file = fopen ( $LOGFILE, "a" )) == FALSE )
-      return;
+    try {
+      if ( ($log_file = fopen ( $LOGFILE, "a" )) == FALSE )
+        return;
 
-    fwrite ($log_file, date("Y-m-d H:i:s")." - $lvl - $msg<br>\r\n");
-    fclose($log_file);
+      fwrite ($log_file, date("Y-m-d H:i:s")." - $lvl - $msg<br>\r\n");
+      fclose($log_file);
+    } catch (Exception $e) {
+        // what else is there to do
+    }
   }
 }
