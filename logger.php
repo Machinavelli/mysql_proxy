@@ -12,7 +12,12 @@ class Logger {
   }
 
   public static function error($msg, $exception = null) {
-    self::write($msg . $exception ? "Exception: " . $exception : '', 'ERROR');
+    if ($exception && get_class($exception) === 'Error'){
+      $ex = $exception->getMessage();
+    } else {
+      $ex = $exception;
+    }
+    self::write($msg . ' ' . ($ex ? ": " . $ex : ''), 'ERROR');
   }
 
   static function setup(){
@@ -36,6 +41,7 @@ class Logger {
     try {
       if ( !self::$is_set_up && self::$failed == null){
         self::setup();
+        self::info( "-------------------" );
       }
       if (self::$is_set_up && !self::$failed){
         fwrite (self::$file, date("Y-m-d H:i:s")." - $lvl - $msg<br>\r\n");
