@@ -24,9 +24,16 @@ function require_auth() {
     $_SERVER['PHP_AUTH_USER'] != auth_user ||
     $_SERVER['PHP_AUTH_PW']   != auth_pw
   );
+  if (!$has_supplied_credentials && $is_not_authenticated) {
+    Logger::warn("Credentials not supplied");
+  }
+
   if ($is_not_authenticated) {
     Logger::warn( "Refusing to serve (unauthorized) = " . get_user_ip() );
     Logger::warn( "User = " . $_SERVER['PHP_AUTH_USER'] );
+    if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
+      Logger::warn("PHP auth: [" . $_SERVER['HTTP_AUTHORIZATION'] . "]");
+    }
     handle_error(401, 'Unauthorized');
   }
 }
@@ -61,7 +68,7 @@ function is_localhost(){
 
 function is_allowed_ip($list) {
   $addr = get_user_ip();
-  if($list == null){
+  if($list == null || count($list) == 0){
     return true;
   } else if (is_localhost()) {
     return true;
@@ -73,9 +80,7 @@ function is_allowed_ip($list) {
 }
 
 function refine_value($str){
-  if(get_magic_quotes_gpc())
-    return stripslashes($str);
-  return $str;
+  return stripslashes($str);
 }
 
 function get_request_value($name){
@@ -239,13 +244,7 @@ $out_formt  = get_request_value('format')?: null;
 define("auth_pw", $credentials["proxy_pass"]);
 define("auth_user", $credentials["proxy_user"]);
 
-
-//Convert Query to defined charset
-if (charset <> "") {
-  $query = mb_convert_encoding($query, charset, "UTF-8");
-} else {
-  Logger::info( "Query =" . $query );
-}
+Logger::info( "Query =" . $query );
 
 if(!is_allowed_ip($allow_ips)){
   Logger::info( "Refusing to serve (forbidden ip)= " . get_user_ip() );
